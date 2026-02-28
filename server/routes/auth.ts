@@ -1,15 +1,22 @@
 import { Router } from "express";
-import db from "../db";
+import { User } from "../models/User";
 
 const router = Router();
 
-router.post("/login", (req, res) => {
+router.post("/login", async (req, res) => {
   const { username, password } = req.body;
-  const user = db.prepare("SELECT * FROM users WHERE username = ? AND password = ?").get(username, password) as any;
-  if (user) {
-    res.json({ success: true, user: { id: user.id, username: user.username, role: user.role } });
-  } else {
-    res.status(401).json({ success: false, message: "Invalid credentials" });
+  try {
+    const user = await User.findOne({ username, password });
+    if (user) {
+      res.json({ 
+        success: true, 
+        user: { id: user._id, username: user.username, role: user.role } 
+      });
+    } else {
+      res.status(401).json({ success: false, message: "Invalid credentials" });
+    }
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 

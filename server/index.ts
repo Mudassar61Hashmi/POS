@@ -1,10 +1,18 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
-import authRoutes from "./server/routes/auth";
-import productRoutes from "./server/routes/products";
-import salesRoutes from "./server/routes/sales";
+import dotenv from "dotenv";
+import connectDB from "./config/db";
+import authRoutes from "./routes/auth";
+import productRoutes from "./routes/products";
+import salesRoutes from "./routes/sales";
+import path from "path";
+
+dotenv.config();
 
 async function startServer() {
+  // Connect to MongoDB
+  await connectDB();
+
   const app = express();
   const PORT = 3000;
 
@@ -24,10 +32,14 @@ async function startServer() {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
+      root: path.resolve(__dirname, "../client")
     });
     app.use(vite.middlewares);
   } else {
-    app.use(express.static("dist"));
+    app.use(express.static(path.resolve(__dirname, "../dist")));
+    app.get("*", (req, res) => {
+      res.sendFile(path.resolve(__dirname, "../dist/index.html"));
+    });
   }
 
   app.listen(PORT, "0.0.0.0", () => {

@@ -1,56 +1,85 @@
 import { Router } from "express";
-import db from "../db";
+import { Sale } from "../models/Sale";
+import { Product } from "../models/Product";
+import mongoose from "mongoose";
 
 const router = Router();
 
-router.get("/sales", (req, res) => {
-  const sales = db.prepare(`
-    SELECT sales.*, users.username as cashier 
-    FROM sales 
-    JOIN users ON sales.user_id = users.id 
-    ORDER BY timestamp DESC
-  `).all();
-  res.json(sales);
+router.get("/sales", async (req, res) => {
+  try {
+    const sales = await Sale.find().sort({ createdAt: -1 });
+    const formattedSales = sales.map(s => ({
+      id: s._id,
+      user_id: s.user_id,
+      total: s.total,
+      timestamp: s.createdAt,
+      cashier: s.cashier
+    }));
+    res.json(formattedSales);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
-router.get("/sales/:id", (req, res) => {
+router.get("/sales/:id", async (req, res) => {
   const { id } = req.params;
-  const items = db.prepare(`
-    SELECT sale_items.*, products.name 
-    FROM sale_items 
-    JOIN products ON sale_items.product_id = products.id 
-    WHERE sale_id = ?
-  `).all(id);
-  res.json(items);
+  try {
+    const sale = await Sale.findById(id);
+    if (!sale) return res.status(404).json({ message: "Sale not found" });
+    
+    const formattedItems = sale.items.map(item => ({
+      id: item._id,
+      sale_id: sale._id,
+      product_id: item.product_id,
+      quantity: item.quantity,
+      price: item.price,
+      name: item.name
+    }));
+    res.json(formattedItems);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
-router.post("/checkout", (req, res) => {
-  const { userId, items, total } = req.body;
+router.post("/checkout", async (req, res) => {
+  const { userId, items, total, cashier } = req.body;
   
-  const transaction = db.transaction(() => {
-    const sale = db.prepare("INSERT INTO sales (user_id, total) VALUES (?, ?)").run(userId, total);
-    const saleId = sale.lastInsertRowid;
-
-    for (const item of items) {
-      // Update stock
-      const product = db.prepare("SELECT quantity FROM products WHERE id = ?").get(item.id) as { quantity: number };
-      if (product.quantity < item.quantity) {
-        throw new Error(`Insufficient stock for product ID ${item.id}`);
-      }
-      db.prepare("UPDATE products SET quantity = quantity - ? WHERE id = ?").run(item.quantity, item.id);
-      
-      // Record sale item
-      db.prepare("INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES (?, ?, ?, ?)")
-        .run(saleId, item.id, item.quantity, item.price);
-    }
-    return saleId;
-  });
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
   try {
-    const saleId = transaction();
-    res.json({ success: true, saleId });
+    // 1. Create the sale
+    const sale = new Sale({
+      user_id: userId,
+      cashier: cashier || "Unknown",
+      total,
+      items: items.map((item: any) => ({
+        product_id: item.id,
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price
+      }))
+    });
+
+    await sale.save({ session });
+
+    // 2. Update stock for each item
+    for (const item of items) {
+      const product = await Product.findById(item.id).session(session);
+      if (!product || product.quantity < item.quantity) {
+        throw new Error(`Insufficient stock for product: ${item.name}`);
+      }
+      product.quantity -= item.quantity;
+      await product.save({ session });
+    }
+
+    await session.commitTransaction();
+    res.json({ success: true, saleId: sale._id });
   } catch (err: any) {
+    await session.abortTransaction();
     res.status(400).json({ success: false, message: err.message });
+  } finally {
+    session.endSession();
   }
 });
 
