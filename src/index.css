@@ -1,1 +1,52 @@
 @import "tailwindcss";
+
+@media print {
+  /* Hide all non-receipt elements */
+  aside, main, .no-print, button, .backdrop-blur-sm {
+    display: none !important;
+  }
+
+  /* Reset body and root for printing */
+  body, #root, .min-h-screen {
+    background: white !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Position the receipt overlay as a normal block */
+  .receipt-overlay {
+    position: static !important;
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+    z-index: auto !important;
+  }
+
+  /* Style the receipt itself */
+  .print-receipt {
+    position: static !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 20px !important;
+    transform: none !important;
+  }
+
+  /* Force black text for better printing */
+  .print-receipt * {
+    color: black !important;
+    background: transparent !important;
+  }
+
+  /* Ensure background colors for accents are preserved if possible */
+  .bg-emerald-50 {
+    background-color: #ecfdf5 !important;
+    -webkit-print-color-adjust: exact;
+  }
+}

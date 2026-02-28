@@ -167,7 +167,7 @@ async function startServer() {
       FROM sale_items si 
       JOIN products p ON si.product_id = p.id 
       WHERE si.sale_id = ?
-    `).get(req.params.id);
+    `).all(req.params.id);
     res.json(items);
   });
 
