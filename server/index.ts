@@ -5,6 +5,7 @@ import connectDB from "./config/db";
 import authRoutes from "./routes/auth";
 import productRoutes from "./routes/products";
 import salesRoutes from "./routes/sales";
+import customerRoutes from "./routes/customers";
 import path from "path";
 
 dotenv.config();
@@ -22,6 +23,7 @@ async function startServer() {
   app.use("/api", authRoutes);
   app.use("/api", productRoutes);
   app.use("/api", salesRoutes);
+  app.use("/api", customerRoutes);
 
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });

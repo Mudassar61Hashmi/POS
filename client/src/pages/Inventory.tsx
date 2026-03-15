@@ -1,17 +1,30 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Product } from "../types";
 import { Plus, Search, Edit2, Trash2, Package, AlertCircle } from "lucide-react";
 import { motion } from "motion/react";
 
-interface InventoryProps {
-  products: Product[];
-  onUpdate: () => void;
-}
-
-export const Inventory: React.FC<InventoryProps> = ({ products, onUpdate }) => {
+export const Inventory: React.FC = () => {
+  const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch("/api/products");
+      const data = await res.json();
+      setProducts(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -22,7 +35,7 @@ export const Inventory: React.FC<InventoryProps> = ({ products, onUpdate }) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
       const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
-      if (res.ok) onUpdate();
+      if (res.ok) fetchProducts();
     } catch (err) {
       console.error(err);
     }
@@ -136,7 +149,7 @@ export const Inventory: React.FC<InventoryProps> = ({ products, onUpdate }) => {
           onClose={() => setIsModalOpen(false)} 
           onSave={() => {
             setIsModalOpen(false);
-            onUpdate();
+            fetchProducts();
           }}
         />
       )}

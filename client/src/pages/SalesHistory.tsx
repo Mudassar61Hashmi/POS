@@ -2,15 +2,13 @@ import React, { useState, useEffect } from "react";
 import { Sale } from "../types";
 import { Search, Calendar, User, DollarSign, Eye, FileText } from "lucide-react";
 import { motion } from "motion/react";
+import { ReceiptModal } from "../components/ReceiptModal";
 
-interface SalesHistoryProps {
-  onShowReceipt: (sale: any) => void;
-}
-
-export const SalesHistory: React.FC<SalesHistoryProps> = ({ onShowReceipt }) => {
+export const SalesHistory: React.FC = () => {
   const [sales, setSales] = useState<Sale[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showReceipt, setShowReceipt] = useState<any>(null);
 
   useEffect(() => {
     fetchSales();
@@ -37,7 +35,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({ onShowReceipt }) => 
     try {
       const res = await fetch(`/api/sales/${sale.id}`);
       const items = await res.json();
-      onShowReceipt({ ...sale, items });
+      setShowReceipt({ ...sale, items });
     } catch (err) {
       console.error(err);
     }
@@ -134,6 +132,13 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({ onShowReceipt }) => 
           )}
         </div>
       </div>
+
+      {showReceipt && (
+        <ReceiptModal 
+          sale={showReceipt} 
+          onClose={() => setShowReceipt(null)} 
+        />
+      )}
     </div>
   );
 };

@@ -1,7 +1,13 @@
 export interface User {
   id: string;
   username: string;
-  role: "admin" | "cashier";
+  role: "admin" | "cashier" | "manager";
+}
+
+export interface Customer {
+  _id: string;
+  name: string;
+  phone: string;
 }
 
 export interface Product {
@@ -16,6 +22,9 @@ export interface Product {
 export interface Sale {
   id: string;
   user_id: string;
+  customer_id?: string;
+  subtotal: number;
+  discount: number;
   total: number;
   timestamp: string;
   cashier: string;

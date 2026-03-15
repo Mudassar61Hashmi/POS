@@ -1,87 +1,66 @@
-import React, { useState, useEffect } from "react";
-import { AnimatePresence, motion } from "motion/react";
-import { User, Product } from "./types";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Login } from "./pages/Login";
 import { POS } from "./pages/POS";
 import { Inventory } from "./pages/Inventory";
+import { Customers } from "./pages/Customers";
 import { SalesHistory } from "./pages/SalesHistory";
-import { DashboardLayout } from "./layouts/DashboardLayout";
-import { ReceiptModal } from "./components/ReceiptModal";
+import { Reports } from "./pages/Reports";
+import { Dashboard } from "./pages/Dashboard";
+import { DashboardLayout } from "./components/DashboardLayout";
 
-export default function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<"pos" | "inventory" | "sales">("pos");
-  const [products, setProducts] = useState<Product[]>([]);
-  const [selectedReceipt, setSelectedReceipt] = useState<any | null>(null);
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const user = localStorage.getItem("user");
+  if (!user) return <Navigate to="/login" />;
+  return <DashboardLayout>{children}</DashboardLayout>;
+};
 
-  useEffect(() => {
-    if (user) {
-      fetchProducts();
-    }
-  }, [user]);
-
-  const fetchProducts = async () => {
-    try {
-      const res = await fetch("/api/products");
-      const data = await res.json();
-      setProducts(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  if (!user) {
-    return <Login onLogin={setUser} />;
-  }
-
+function App() {
   return (
-    <>
-      <DashboardLayout 
-        user={user} 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-        onLogout={() => setUser(null)}
-      >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="h-full"
-          >
-            {activeTab === "pos" && (
-              <POS 
-                user={user} 
-                products={products} 
-                onCheckout={fetchProducts} 
-                onShowReceipt={setSelectedReceipt} 
-              />
-            )}
-            {activeTab === "inventory" && (
-              <Inventory 
-                products={products} 
-                onUpdate={fetchProducts} 
-              />
-            )}
-            {activeTab === "sales" && (
-              <SalesHistory 
-                onShowReceipt={setSelectedReceipt} 
-              />
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </DashboardLayout>
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        
+        <Route path="/" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/pos" element={
+          <ProtectedRoute>
+            <POS />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/inventory" element={
+          <ProtectedRoute>
+            <Inventory />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/customers" element={
+          <ProtectedRoute>
+            <Customers />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/sales" element={
+          <ProtectedRoute>
+            <SalesHistory />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/reports" element={
+          <ProtectedRoute>
+            <Reports />
+          </ProtectedRoute>
+        } />
 
-      <AnimatePresence>
-        {selectedReceipt && (
-          <ReceiptModal 
-            sale={selectedReceipt} 
-            onClose={() => setSelectedReceipt(null)} 
-          />
-        )}
-      </AnimatePresence>
-    </>
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </Router>
   );
 }
+
+export default App;

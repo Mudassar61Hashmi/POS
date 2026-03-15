@@ -1,16 +1,13 @@
 import React, { useState } from "react";
-import { User } from "../types";
 import { LogIn, Shield, User as UserIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-interface LoginProps {
-  onLogin: (user: User) => void;
-}
-
-export const Login: React.FC<LoginProps> = ({ onLogin }) => {
+export const Login: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +24,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
       const data = await res.json();
 
       if (res.ok) {
-        onLogin(data.user);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        navigate("/");
       } else {
         setError(data.message || "Login failed");
       }

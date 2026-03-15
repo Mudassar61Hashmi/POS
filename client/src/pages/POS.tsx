@@ -1,30 +1,69 @@
-import React, { useState, useMemo } from "react";
-import { User, Product } from "../types";
-import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, Package } from "lucide-react";
+import React, { useState, useMemo, useEffect } from "react";
+import { User, Product, Customer } from "../types";
+import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, Package, User as UserIcon, Percent } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-
-interface POSProps {
-  user: User;
-  products: Product[];
-  onCheckout: () => void;
-  onShowReceipt: (sale: any) => void;
-}
+import { ReceiptModal } from "../components/ReceiptModal";
 
 interface CartItem extends Product {
   cartQuantity: number;
 }
 
-export const POS: React.FC<POSProps> = ({ user, products, onCheckout, onShowReceipt }) => {
+export const POS: React.FC = () => {
+  const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [stockFilter, setStockFilter] = useState("All");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+  const [discount, setDiscount] = useState<number>(0);
+  const [showReceipt, setShowReceipt] = useState<any>(null);
+
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  useEffect(() => {
+    fetchCustomers();
+    fetchProducts();
+  }, []);
+
+  const fetchCustomers = async () => {
+    try {
+      const res = await fetch("/api/customers");
+      const data = await res.json();
+      setCustomers(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch("/api/products");
+      const data = await res.json();
+      setProducts(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const categories = useMemo(() => {
+    const cats = new Set(products.map(p => p.category));
+    return ["All", ...Array.from(cats)];
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
-    return products.filter(p => 
-      p.name.toLowerCase().includes(search.toLowerCase()) || 
-      p.barcode.includes(search)
-    );
-  }, [products, search]);
+    return products.filter(p => {
+      const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.barcode.includes(search);
+      const matchesCategory = categoryFilter === "All" || p.category === categoryFilter;
+      const matchesStock = stockFilter === "All" || 
+        (stockFilter === "Low" && p.quantity <= 10) || 
+        (stockFilter === "In Stock" && p.quantity > 10) ||
+        (stockFilter === "Out of Stock" && p.quantity <= 0);
+      
+      return matchesSearch && matchesCategory && matchesStock;
+    });
+  }, [products, search, categoryFilter, stockFilter]);
 
   const addToCart = (product: Product) => {
     if (product.quantity <= 0) return;
@@ -57,9 +96,13 @@ export const POS: React.FC<POSProps> = ({ user, products, onCheckout, onShowRece
     }));
   };
 
-  const total = useMemo(() => {
+  const subtotal = useMemo(() => {
     return cart.reduce((sum, item) => sum + (item.price * item.cartQuantity), 0);
   }, [cart]);
+
+  const total = useMemo(() => {
+    return Math.max(0, subtotal - discount);
+  }, [subtotal, discount]);
 
   const handleCheckout = async () => {
     if (cart.length === 0) return;
@@ -71,7 +114,10 @@ export const POS: React.FC<POSProps> = ({ user, products, onCheckout, onShowRece
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: user.id,
+          customerId: selectedCustomerId || null,
           cashier: user.username,
+          subtotal,
+          discount,
           total,
           items: cart.map(item => ({
             id: item._id,
@@ -84,13 +130,17 @@ export const POS: React.FC<POSProps> = ({ user, products, onCheckout, onShowRece
 
       const data = await res.json();
       if (res.ok) {
-        onCheckout();
         setCart([]);
-        // Fetch full sale details for receipt
+        setDiscount(0);
+        setSelectedCustomerId("");
+        fetchProducts(); // Refresh stock
+        
         const saleRes = await fetch(`/api/sales/${data.saleId}`);
         const saleItems = await saleRes.json();
-        onShowReceipt({
+        setShowReceipt({
           id: data.saleId,
+          subtotal,
+          discount,
           total,
           timestamp: new Date().toISOString(),
           cashier: user.username,
@@ -110,15 +160,38 @@ export const POS: React.FC<POSProps> = ({ user, products, onCheckout, onShowRece
     <div className="flex h-full gap-6 p-6 bg-[#f5f5f5]">
       {/* Products Section */}
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="relative mb-6">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search products by name or barcode..."
-            className="w-full pl-12 pr-4 py-4 bg-white border-none rounded-2xl shadow-sm focus:ring-2 focus:ring-black/5 outline-none text-sm transition-all"
-          />
+        <div className="flex gap-4 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search products by name or barcode..."
+              className="w-full pl-12 pr-4 py-4 bg-white border-none rounded-2xl shadow-sm focus:ring-2 focus:ring-black/5 outline-none text-sm transition-all"
+            />
+          </div>
+          
+          <div className="flex gap-2">
+            <select 
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="px-4 py-4 bg-white border-none rounded-2xl shadow-sm text-sm outline-none focus:ring-2 focus:ring-black/5"
+            >
+              {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+            </select>
+            
+            <select 
+              value={stockFilter}
+              onChange={(e) => setStockFilter(e.target.value)}
+              className="px-4 py-4 bg-white border-none rounded-2xl shadow-sm text-sm outline-none focus:ring-2 focus:ring-black/5"
+            >
+              <option value="All">All Stock</option>
+              <option value="In Stock">In Stock</option>
+              <option value="Low">Low Stock</option>
+              <option value="Out of Stock">Out of Stock</option>
+            </select>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
@@ -159,6 +232,23 @@ export const POS: React.FC<POSProps> = ({ user, products, onCheckout, onShowRece
           <span className="bg-black text-white text-[10px] font-bold px-2 py-1 rounded-full">
             {cart.length} ITEMS
           </span>
+        </div>
+
+        {/* Customer Selection */}
+        <div className="p-4 border-b border-black/5 bg-gray-50/50">
+          <div className="relative">
+            <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <select
+              value={selectedCustomerId}
+              onChange={(e) => setSelectedCustomerId(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-white border border-black/5 rounded-xl text-sm outline-none focus:ring-2 focus:ring-black/5 appearance-none"
+            >
+              <option value="">Walk-in Customer</option>
+              {customers.map(c => (
+                <option key={c._id} value={c._id}>{c.name} ({c.phone})</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
@@ -216,8 +306,25 @@ export const POS: React.FC<POSProps> = ({ user, products, onCheckout, onShowRece
           <div className="space-y-2">
             <div className="flex justify-between text-sm text-gray-500">
               <span>Subtotal</span>
-              <span>${total.toFixed(2)}</span>
+              <span>${subtotal.toFixed(2)}</span>
             </div>
+            
+            <div className="flex items-center justify-between text-sm text-gray-500">
+              <div className="flex items-center gap-1">
+                <Percent size={14} />
+                <span>Discount</span>
+              </div>
+              <div className="relative w-24">
+                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                <input 
+                  type="number"
+                  value={discount}
+                  onChange={(e) => setDiscount(Math.max(0, parseFloat(e.target.value) || 0))}
+                  className="w-full pl-5 pr-2 py-1 bg-white border border-black/5 rounded-lg text-right text-sm outline-none focus:ring-1 focus:ring-black/10"
+                />
+              </div>
+            </div>
+
             <div className="flex justify-between text-sm text-gray-500">
               <span>Tax (0%)</span>
               <span>$0.00</span>
@@ -238,6 +345,13 @@ export const POS: React.FC<POSProps> = ({ user, products, onCheckout, onShowRece
           </button>
         </div>
       </div>
+
+      {showReceipt && (
+        <ReceiptModal 
+          sale={showReceipt} 
+          onClose={() => setShowReceipt(null)} 
+        />
+      )}
     </div>
   );
 };

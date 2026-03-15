@@ -7,15 +7,42 @@ const router = Router();
 
 router.get("/sales", async (req, res) => {
   try {
-    const sales = await Sale.find().sort({ createdAt: -1 });
+    const sales = await Sale.find().populate("customer_id").sort({ createdAt: -1 });
     const formattedSales = sales.map(s => ({
       id: s._id,
       user_id: s.user_id,
+      customer_id: s.customer_id,
+      subtotal: s.subtotal || s.total,
+      discount: s.discount || 0,
       total: s.total,
       timestamp: s.createdAt,
       cashier: s.cashier
     }));
     res.json(formattedSales);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.get("/reports", async (req, res) => {
+  const { startDate, endDate } = req.query;
+  try {
+    const query: any = {};
+    if (startDate && endDate) {
+      query.createdAt = {
+        $gte: new Date(startDate as string),
+        $lte: new Date(endDate as string)
+      };
+    }
+
+    const sales = await Sale.find(query);
+    const totalRevenue = sales.reduce((sum, s) => sum + s.total, 0);
+    
+    res.json({
+      totalRevenue,
+      totalSales: sales.length,
+      period: { startDate, endDate }
+    });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -42,7 +69,7 @@ router.get("/sales/:id", async (req, res) => {
 });
 
 router.post("/checkout", async (req, res) => {
-  const { userId, items, total, cashier } = req.body;
+  const { userId, customerId, items, subtotal, discount, total, cashier } = req.body;
   
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -51,7 +78,10 @@ router.post("/checkout", async (req, res) => {
     // 1. Create the sale
     const sale = new Sale({
       user_id: userId,
+      customer_id: customerId || null,
       cashier: cashier || "Unknown",
+      subtotal,
+      discount: discount || 0,
       total,
       items: items.map((item: any) => ({
         product_id: item.id,
