@@ -36,31 +36,31 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   };
 
   return (
-    <div className="flex h-screen bg-[#f5f5f5] overflow-hidden">
+    <div className="flex h-screen bg-[#f8f9fa] overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-72 bg-white border-r border-black/5 flex flex-col">
+      <aside className="w-72 bg-white border-r border-zinc-100 flex flex-col">
         <div className="p-8">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white shadow-lg shadow-black/20">
-              <ShoppingCart size={20} />
+          <div className="flex items-center gap-3 mb-10">
+            <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center text-white shadow-xl shadow-black/20">
+              <ShoppingCart size={24} />
             </div>
-            <span className="text-xl font-bold tracking-tight">PrimePOS</span>
+            <span className="text-2xl font-bold tracking-tight text-zinc-900">PrimePOS</span>
           </div>
 
-          <nav className="space-y-1">
+          <nav className="space-y-2">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                  className={`flex items-center gap-3 px-5 py-4 rounded-2xl text-sm font-bold transition-all ${
                     isActive 
                       ? "bg-black text-white shadow-lg shadow-black/10" 
-                      : "text-gray-500 hover:bg-gray-50 hover:text-black"
+                      : "text-zinc-400 hover:bg-zinc-50 hover:text-zinc-900"
                   }`}
                 >
-                  <item.icon size={18} />
+                  <item.icon size={20} />
                   {item.label}
                 </Link>
               );
@@ -68,24 +68,26 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
           </nav>
         </div>
 
-        <div className="mt-auto p-8 border-t border-black/5">
-          <div className="flex items-center gap-3 mb-6 px-2">
-            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-400">
-              <UserIcon size={20} />
+        <div className="mt-auto p-8">
+          <div className="bg-zinc-50 p-6 rounded-[2rem] mb-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-zinc-400 shadow-sm border border-zinc-100">
+                <UserIcon size={24} />
+              </div>
+              <div className="flex flex-col overflow-hidden">
+                <span className="text-sm font-bold text-zinc-900 truncate">{user.username || "User"}</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">{user.role || "Staff"}</span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-bold text-black truncate max-w-[140px]">{user.username || "User"}</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{user.role || "Staff"}</span>
-            </div>
+            
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold text-red-500 hover:bg-red-100 transition-all"
+            >
+              <LogOut size={16} />
+              Sign Out
+            </button>
           </div>
-          
-          <button 
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 transition-all"
-          >
-            <LogOut size={18} />
-            Sign Out
-          </button>
         </div>
       </aside>
 

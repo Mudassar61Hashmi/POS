@@ -38,9 +38,45 @@ router.get("/reports", async (req, res) => {
     const sales = await Sale.find(query);
     const totalRevenue = sales.reduce((sum, s) => sum + s.total, 0);
     
+    // Daily revenue breakdown
+    const dailyRevenue: { [key: string]: number } = {};
+    sales.forEach(s => {
+      const date = s.createdAt.toISOString().split('T')[0];
+      dailyRevenue[date] = (dailyRevenue[date] || 0) + s.total;
+    });
+
+    const revenueChartData = Object.entries(dailyRevenue)
+      .map(([date, amount]) => ({ date, amount }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    // Category breakdown
+    const categoryData: { [key: string]: number } = {};
+    sales.forEach(s => {
+      s.items.forEach(item => {
+        // We need to fetch category from Product model or store it in Sale items
+        // For now, let's assume we might need to aggregate differently or we can just use the item names if category isn't in Sale
+        // Actually, Sale items don't have category. Let's update Sale model to include category or fetch it here.
+      });
+    });
+
+    // Let's just do revenue for now and maybe top products if categories are hard to get without extra queries
+    const topProducts: { [key: string]: number } = {};
+    sales.forEach(s => {
+      s.items.forEach(item => {
+        topProducts[item.name] = (topProducts[item.name] || 0) + item.quantity;
+      });
+    });
+
+    const topProductsData = Object.entries(topProducts)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+
     res.json({
       totalRevenue,
       totalSales: sales.length,
+      revenueChartData,
+      topProductsData,
       period: { startDate, endDate }
     });
   } catch (err: any) {

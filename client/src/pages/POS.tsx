@@ -157,26 +157,33 @@ export const POS: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full gap-6 p-6 bg-[#f5f5f5]">
+    <div className="flex h-full gap-8 p-8 bg-[#f8f9fa] overflow-hidden">
       {/* Products Section */}
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex gap-4 mb-6">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Point of Sale</h1>
+            <p className="text-zinc-500 text-sm mt-1">Select products to add to the current transaction.</p>
+          </div>
+        </div>
+
+        <div className="flex gap-4 mb-8">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search products by name or barcode..."
-              className="w-full pl-12 pr-4 py-4 bg-white border-none rounded-2xl shadow-sm focus:ring-2 focus:ring-black/5 outline-none text-sm transition-all"
+              className="w-full pl-12 pr-4 py-4 bg-white border border-zinc-100 rounded-2xl shadow-sm focus:ring-2 focus:ring-black/5 outline-none text-sm transition-all"
             />
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <select 
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-4 py-4 bg-white border-none rounded-2xl shadow-sm text-sm outline-none focus:ring-2 focus:ring-black/5"
+              className="px-6 py-4 bg-white border border-zinc-100 rounded-2xl shadow-sm text-sm font-bold text-zinc-600 outline-none focus:ring-2 focus:ring-black/5 appearance-none cursor-pointer"
             >
               {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
             </select>
@@ -184,7 +191,7 @@ export const POS: React.FC = () => {
             <select 
               value={stockFilter}
               onChange={(e) => setStockFilter(e.target.value)}
-              className="px-4 py-4 bg-white border-none rounded-2xl shadow-sm text-sm outline-none focus:ring-2 focus:ring-black/5"
+              className="px-6 py-4 bg-white border border-zinc-100 rounded-2xl shadow-sm text-sm font-bold text-zinc-600 outline-none focus:ring-2 focus:ring-black/5 appearance-none cursor-pointer"
             >
               <option value="All">All Stock</option>
               <option value="In Stock">In Stock</option>
@@ -195,27 +202,32 @@ export const POS: React.FC = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map(product => (
               <motion.button
                 key={product._id}
-                whileHover={{ y: -4 }}
+                whileHover={{ y: -5 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => addToCart(product)}
                 disabled={product.quantity <= 0}
-                className={`flex flex-col p-4 bg-white rounded-2xl shadow-sm border border-transparent hover:border-black/5 transition-all text-left group ${product.quantity <= 0 ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
+                className={`flex flex-col p-6 bg-white rounded-[2rem] shadow-sm border border-zinc-100 hover:border-zinc-200 hover:shadow-xl hover:shadow-black/5 transition-all text-left group relative ${product.quantity <= 0 ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
               >
-                <div className="w-full aspect-square bg-gray-50 rounded-xl mb-4 flex items-center justify-center text-gray-300 group-hover:text-black transition-colors">
-                  <Package size={40} />
+                <div className="w-full aspect-square bg-zinc-50 rounded-3xl mb-5 flex items-center justify-center text-zinc-300 group-hover:bg-zinc-100 transition-colors">
+                  <Package size={48} />
                 </div>
-                <h3 className="font-semibold text-sm mb-1 truncate">{product.name}</h3>
-                <p className="text-xs text-gray-400 mb-3">{product.category}</p>
+                <h3 className="font-bold text-zinc-900 mb-1 truncate">{product.name}</h3>
+                <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-4">{product.category}</p>
                 <div className="mt-auto flex items-center justify-between">
-                  <span className="font-bold text-lg">${product.price.toFixed(2)}</span>
-                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${product.quantity > 10 ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'}`}>
+                  <span className="font-bold text-xl text-zinc-900">${product.price.toFixed(2)}</span>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-lg ${product.quantity > 10 ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'}`}>
                     {product.quantity} in stock
                   </span>
                 </div>
+                {product.quantity <= 10 && product.quantity > 0 && (
+                  <div className="absolute top-4 right-4 bg-orange-500 text-white text-[8px] font-bold px-2 py-1 rounded-full shadow-lg">
+                    LOW
+                  </div>
+                )}
               </motion.button>
             ))}
           </div>
@@ -223,78 +235,84 @@ export const POS: React.FC = () => {
       </div>
 
       {/* Cart Section */}
-      <div className="w-96 flex flex-col bg-white rounded-3xl shadow-sm border border-black/5 overflow-hidden">
-        <div className="p-6 border-b border-black/5 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5" />
-            <h2 className="font-bold">Current Order</h2>
+      <div className="w-[400px] flex flex-col bg-white rounded-[2.5rem] shadow-2xl shadow-black/5 border border-zinc-100 overflow-hidden">
+        <div className="p-8 border-b border-zinc-100">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white">
+                <ShoppingCart size={20} />
+              </div>
+              <h2 className="text-xl font-bold text-zinc-900">Current Order</h2>
+            </div>
+            <span className="bg-zinc-100 text-zinc-500 text-[10px] font-bold px-3 py-1 rounded-full tracking-widest">
+              {cart.length} ITEMS
+            </span>
           </div>
-          <span className="bg-black text-white text-[10px] font-bold px-2 py-1 rounded-full">
-            {cart.length} ITEMS
-          </span>
-        </div>
 
-        {/* Customer Selection */}
-        <div className="p-4 border-b border-black/5 bg-gray-50/50">
+          {/* Customer Selection */}
           <div className="relative">
-            <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
             <select
               value={selectedCustomerId}
               onChange={(e) => setSelectedCustomerId(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white border border-black/5 rounded-xl text-sm outline-none focus:ring-2 focus:ring-black/5 appearance-none"
+              className="w-full pl-12 pr-4 py-4 bg-zinc-50 border-none rounded-2xl text-sm font-bold text-zinc-600 outline-none focus:ring-2 focus:ring-black/5 appearance-none cursor-pointer"
             >
               <option value="">Walk-in Customer</option>
               {customers.map(c => (
-                <option key={c._id} value={c._id}>{c.name} ({c.phone})</option>
+                <option key={c._id} value={c._id}>{c.name}</option>
               ))}
             </select>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
           <AnimatePresence initial={false}>
             {cart.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-gray-300 gap-4 opacity-50">
-                <ShoppingCart size={48} />
-                <p className="text-sm font-medium">Your cart is empty</p>
+              <div className="h-full flex flex-col items-center justify-center text-zinc-300 gap-4 opacity-50">
+                <ShoppingCart size={64} />
+                <p className="text-sm font-bold tracking-tight">Your cart is empty</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {cart.map(item => (
                   <motion.div
                     key={item._id}
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl group"
+                    className="flex items-center gap-4 p-4 bg-zinc-50 rounded-3xl group"
                   >
+                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-zinc-300 shadow-sm border border-zinc-100">
+                      <Package size={24} />
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-semibold truncate">{item.name}</h4>
-                      <p className="text-xs text-gray-400">${item.price.toFixed(2)} each</p>
+                      <h4 className="text-sm font-bold text-zinc-900 truncate">{item.name}</h4>
+                      <p className="text-xs font-bold text-zinc-400">${item.price.toFixed(2)} each</p>
                     </div>
                     
-                    <div className="flex items-center gap-2 bg-white rounded-xl p-1 border border-black/5">
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="flex items-center gap-2 bg-white rounded-xl p-1 border border-zinc-100 shadow-sm">
+                        <button 
+                          onClick={() => updateQuantity(item._id, -1)}
+                          className="w-7 h-7 flex items-center justify-center hover:bg-zinc-50 rounded-lg transition-colors text-zinc-400 hover:text-zinc-900"
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <span className="text-xs font-bold w-4 text-center text-zinc-900">{item.cartQuantity}</span>
+                        <button 
+                          onClick={() => updateQuantity(item._id, 1)}
+                          className="w-7 h-7 flex items-center justify-center hover:bg-zinc-50 rounded-lg transition-colors text-zinc-400 hover:text-zinc-900"
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
                       <button 
-                        onClick={() => updateQuantity(item._id, -1)}
-                        className="p-1 hover:bg-gray-50 rounded-lg transition-colors"
+                        onClick={() => removeFromCart(item._id)}
+                        className="text-[10px] font-bold text-red-400 hover:text-red-600 transition-colors uppercase tracking-widest"
                       >
-                        <Minus size={14} />
-                      </button>
-                      <span className="text-xs font-bold w-4 text-center">{item.cartQuantity}</span>
-                      <button 
-                        onClick={() => updateQuantity(item._id, 1)}
-                        className="p-1 hover:bg-gray-50 rounded-lg transition-colors"
-                      >
-                        <Plus size={14} />
+                        Remove
                       </button>
                     </div>
-
-                    <button 
-                      onClick={() => removeFromCart(item._id)}
-                      className="p-2 text-gray-300 hover:text-red-500 transition-colors"
-                    >
-                      <Trash2 size={16} />
-                    </button>
                   </motion.div>
                 ))}
               </div>
@@ -302,46 +320,52 @@ export const POS: React.FC = () => {
           </AnimatePresence>
         </div>
 
-        <div className="p-6 bg-gray-50 border-t border-black/5 space-y-4">
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm text-gray-500">
+        <div className="p-8 bg-zinc-50 border-t border-zinc-100 space-y-6 rounded-t-[3rem]">
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm font-bold text-zinc-400">
               <span>Subtotal</span>
-              <span>${subtotal.toFixed(2)}</span>
+              <span className="text-zinc-900">${subtotal.toFixed(2)}</span>
             </div>
             
-            <div className="flex items-center justify-between text-sm text-gray-500">
-              <div className="flex items-center gap-1">
+            <div className="flex items-center justify-between text-sm font-bold text-zinc-400">
+              <div className="flex items-center gap-2">
                 <Percent size={14} />
                 <span>Discount</span>
               </div>
-              <div className="relative w-24">
-                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+              <div className="relative w-28">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">$</span>
                 <input 
                   type="number"
                   value={discount}
                   onChange={(e) => setDiscount(Math.max(0, parseFloat(e.target.value) || 0))}
-                  className="w-full pl-5 pr-2 py-1 bg-white border border-black/5 rounded-lg text-right text-sm outline-none focus:ring-1 focus:ring-black/10"
+                  className="w-full pl-7 pr-3 py-2 bg-white border border-zinc-100 rounded-xl text-right text-sm font-bold text-zinc-900 outline-none focus:ring-2 focus:ring-black/5"
                 />
               </div>
             </div>
 
-            <div className="flex justify-between text-sm text-gray-500">
+            <div className="flex justify-between text-sm font-bold text-zinc-400">
               <span>Tax (0%)</span>
-              <span>$0.00</span>
+              <span className="text-zinc-900">$0.00</span>
             </div>
-            <div className="flex justify-between text-lg font-bold pt-2 border-t border-black/5">
-              <span>Total</span>
-              <span>${total.toFixed(2)}</span>
+            <div className="flex justify-between items-center pt-4 border-t border-zinc-200">
+              <span className="text-lg font-bold text-zinc-900">Total Amount</span>
+              <span className="text-3xl font-bold text-zinc-900">${total.toFixed(2)}</span>
             </div>
           </div>
 
           <button
             disabled={cart.length === 0 || loading}
             onClick={handleCheckout}
-            className="w-full py-4 bg-black text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-zinc-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-black/10"
+            className="w-full py-5 bg-black text-white rounded-[2rem] font-bold text-lg flex items-center justify-center gap-3 hover:bg-zinc-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-black/20"
           >
-            <CreditCard size={18} />
-            {loading ? "Processing..." : "Complete Checkout"}
+            {loading ? (
+              <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <>
+                <CreditCard size={20} />
+                Complete Payment
+              </>
+            )}
           </button>
         </div>
       </div>

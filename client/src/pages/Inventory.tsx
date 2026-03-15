@@ -42,34 +42,34 @@ export const Inventory: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col p-6 bg-[#f5f5f5]">
+    <div className="h-full flex flex-col p-8 bg-[#f8f9fa] overflow-y-auto custom-scrollbar">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Inventory Management</h1>
-          <p className="text-gray-500 text-sm">Monitor and manage your product stock</p>
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Inventory Management</h1>
+          <p className="text-zinc-500 text-sm mt-1">Monitor and manage your product stock levels and pricing.</p>
         </div>
         <button 
           onClick={() => {
             setEditingProduct(null);
             setIsModalOpen(true);
           }}
-          className="flex items-center gap-2 px-6 py-3 bg-black text-white rounded-xl font-semibold hover:bg-zinc-800 transition-all shadow-lg shadow-black/5"
+          className="flex items-center gap-2 px-6 py-3 bg-black text-white rounded-2xl text-xs font-bold hover:bg-zinc-800 transition-all shadow-lg shadow-black/10"
         >
-          <Plus size={18} />
+          <Plus size={16} />
           Add New Product
         </button>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-sm border border-black/5 flex-1 flex flex-col overflow-hidden">
-        <div className="p-6 border-b border-black/5">
+      <div className="bg-white rounded-[2.5rem] shadow-sm border border-zinc-100 flex-1 flex flex-col overflow-hidden">
+        <div className="p-8 border-b border-zinc-100 bg-zinc-50/50">
           <div className="relative max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name or barcode..."
-              className="w-full pl-11 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 outline-none text-sm transition-all"
+              className="w-full pl-11 pr-4 py-4 bg-white border border-zinc-100 rounded-2xl focus:ring-2 focus:ring-black/5 outline-none text-sm transition-all shadow-sm"
             />
           </div>
         </div>
@@ -77,38 +77,40 @@ export const Inventory: React.FC = () => {
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/50">
-                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Product</th>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Category</th>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Barcode</th>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Price</th>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Stock</th>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-right">Actions</th>
+              <tr className="bg-zinc-50/50">
+                <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">Product</th>
+                <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">Category</th>
+                <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">Barcode</th>
+                <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">Price</th>
+                <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">Stock</th>
+                <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-black/5">
+            <tbody className="divide-y divide-zinc-100">
               {filteredProducts.map(product => (
-                <tr key={product._id} className="hover:bg-gray-50/50 transition-colors group">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 group-hover:text-black transition-colors">
-                        <Package size={20} />
+                <tr key={product._id} className="hover:bg-zinc-50/50 transition-colors group">
+                  <td className="px-8 py-5">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-zinc-100 rounded-2xl flex items-center justify-center text-zinc-400 group-hover:bg-white transition-colors border border-transparent group-hover:border-zinc-100">
+                        <Package size={24} />
                       </div>
-                      <span className="font-semibold text-sm">{product.name}</span>
+                      <div>
+                        <p className="font-bold text-zinc-900">{product.name}</p>
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{product.barcode}</p>
+                      </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="text-xs text-gray-500">{product.category}</span>
+                  <td className="px-8 py-5">
+                    <span className="px-3 py-1 bg-zinc-100 text-zinc-600 rounded-lg text-[10px] font-bold uppercase tracking-widest">
+                      {product.category}
+                    </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="text-xs font-mono text-gray-400">{product.barcode}</span>
+                  <td className="px-8 py-5">
+                    <span className="font-bold text-lg text-zinc-900">${product.price.toFixed(2)}</span>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="font-bold text-sm">${product.price.toFixed(2)}</span>
-                  </td>
-                  <td className="px-6 py-4">
+                  <td className="px-8 py-5">
                     <div className="flex items-center gap-2">
-                      <span className={`text-sm font-bold ${product.quantity <= 10 ? 'text-red-500' : 'text-gray-900'}`}>
+                      <span className={`text-sm font-bold ${product.quantity <= 10 ? 'text-red-500' : 'text-zinc-900'}`}>
                         {product.quantity}
                       </span>
                       {product.quantity <= 10 && (
@@ -116,20 +118,29 @@ export const Inventory: React.FC = () => {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-8 py-5">
+                    {product.quantity <= 0 ? (
+                      <span className="px-3 py-1 bg-red-50 text-red-600 rounded-lg text-[10px] font-bold uppercase tracking-widest">Out of Stock</span>
+                    ) : product.quantity <= 10 ? (
+                      <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-lg text-[10px] font-bold uppercase tracking-widest">Low Stock</span>
+                    ) : (
+                      <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-bold uppercase tracking-widest">In Stock</span>
+                    )}
+                  </td>
+                  <td className="px-8 py-5 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button 
                         onClick={() => {
                           setEditingProduct(product);
                           setIsModalOpen(true);
                         }}
-                        className="p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-all"
+                        className="p-3 text-zinc-400 hover:text-black hover:bg-zinc-100 rounded-xl transition-all"
                       >
                         <Edit2 size={16} />
                       </button>
                       <button 
                         onClick={() => handleDelete(product._id)}
-                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                        className="p-3 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
                       >
                         <Trash2 size={16} />
                       </button>
